@@ -1,0 +1,126 @@
+;; WASI Cryptography API.
+;;
+;; This is a `witx` file. See [here](https://github.com/WebAssembly/WASI/tree/master/docs/witx.md)
+;; for an explanation of what that means.
+
+(use "typenames.witx")
+
+(module $wasi_ephemeral_crypto
+  ;;; Linear memory to be accessed by WASI functions that need it.
+  (import "memory" (memory))
+
+  ;;; Create a handle of AEAD (Authenticated Encryption with
+  ;;; Associated Data) operation.
+  (@interface func (export "aead_open")
+    ;;; The name of the symmetric cipher algorithm. This is either
+    ;;; from the IANA assignments of JSON Object Signing and
+    ;;; Encryption (JOSE) or defined by the host implementation.
+    (param $algorithm string)
+    ;;; The key for this operation.
+    (param $key (@witx const_pointer u8))
+    (param $key_len $size)
+    (result $error $errno)
+    ;;; The cipher handle that has been opened.
+    (result $opened_aead $aead)
+  )
+
+  ;;; Perform in-place encryption with the handle.
+  (@interface func (export "aead_encrypt")
+    (param $aead $aead)
+    ;;; The nonce to set for this message.
+    (param $nonce (@witx const_pointer u8))
+    (param $nonce_len $size)
+    ;;; The additional data to be authenticated.
+    (param $auth (@witx const_pointer u8))
+    (param $auth_len $size)
+    (param $data $iovec_array)
+    ;;; The buffer where the authentication tag is stored. The length
+    ;;; must be equal to or shorter than the tag length specified for
+    ;;; the algorithm.  If it is shorter, only the first `tag_len`
+    ;;; octets are written to `tag`.
+    (param $tag (@witx pointer u8))
+    (param $tag_len $size)
+    (result $error $errno)
+  )
+
+  ;;; Perform in-place decryption with the handle.
+  (@interface func (export "aead_decrypt")
+    (param $aead $aead)
+    ;;; The nonce to set for this message.
+    (param $nonce (@witx const_pointer u8))
+    (param $nonce_len $size)
+    ;;; The additional data to be authenticated.
+    (param $auth (@witx const_pointer u8))
+    (param $auth_len $size)
+    (param $data $iovec_array)
+    ;;; The authentication tag to verify. The length must be equal to
+    ;;; or shorter than the tag length specified for the algorithm.
+    (param $tag (@witx const_pointer u8))
+    (param $tag_len $size)
+    (result $error $errno)
+  )
+
+  ;;; Close an AEAD handle.
+  (@interface func (export "aead_close")
+    (param $aead $aead)
+    (result $error $errno)
+  )
+
+  ;;; Create a handle of MAC (Message Authentication Code) operation.
+  (@interface func (export "mac_open")
+    ;;; The name of the MAC algorithm. This is either from the IANA
+    ;;; assignments of JSON Object Signing and Encryption (JOSE) or
+    ;;; defined by the host implementation.
+    (param $algorithm string)
+    ;;; The key for this operation.
+    (param $key (@witx const_pointer u8))
+    (param $key_len $size)
+    (result $error $errno)
+    (result $opened_mac $mac)
+  )
+
+  ;;; Process some data for MAC.
+  (@interface func (export "mac_update")
+    (param $mac $mac)
+    (param $data $ciovec_array)
+    (result $error $errno)
+  )
+
+  ;;; Extract the MAC.
+  (@interface func (export "mac_digest")
+    (param $mac $mac)
+    ;;; The buffer where the MAC is stored. The length must be equal
+    ;;; to or shorter than the output length specified for the algorithm.
+    ;;; If it is shorter, only the first `digest_len` octets are written
+    ;;; to `digest`.
+    (param $digest (@witx pointer u8))
+    (param $digest_len $size)
+    (result $error $errno)
+  )
+
+  ;;; Close a MAC handle.
+  (@interface func (export "mac_close")
+    (param $mac $mac)
+    (result $error $errno)
+  )
+
+  ;;; Extract or expand key using HKDF (HMAC-based Key Derivation
+  ;;; Function) algorithm.
+  (@interface func (export "hkdf")
+    ;;; The name of the underlying MAC algorithm. This is either from
+    ;;; the IANA assignments of JSON Object Signing and Encryption
+    ;;; (JOSE) or defined by the host implementation.
+    (param $algorithm string)
+    (param $op $hkdf_operation)
+    ;;; If `op` is `extract`, this is the input keying material.
+    ;;; If `op` is `expand`, this is a pseudorandom key (PRK),
+    ;;; produced by the previous `extract` operation.
+    (param $input (@witx const_pointer u8))
+    (param $input_len $size)
+    ;;; The buffer where the pseudorandom key or output keying
+    ;;; material is stored.
+    (param $output (@witx pointer u8))
+    (param $outpt_len $size)
+    (result $error $errno)
+  )
+)
