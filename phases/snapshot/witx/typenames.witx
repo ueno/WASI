@@ -765,3 +765,20 @@
     (field $u $prestat_u)
   )
 )
+
+;;; A handle for AEAD (Authenticated Encryption with Associated Data) operation.
+(typename $aead (handle))
+
+;;; A handle for MAC (Message Authentication Code) operation.
+(typename $mac (handle))
+
+;;; Identifiers for HKDF (HMAC-based Key Derivation Function) operation.
+(typename $hkdf_operation
+  (enum u8
+    ;;; Extract a fixed-sized pseudorandom key.
+    $extract
+    ;;; Expand a fixed-sized pseudorandom key to an arbitrary length
+    ;;; keying material.
+    $expand
+  )
+)
